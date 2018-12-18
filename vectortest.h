@@ -33,7 +33,7 @@ public:
 };
 
 
-//TODO: Replace this compiler echo
+//cpp macro -> https://stackoverflow.com/questions/10582500/c-macro-and-default-arguments-in-function 
 #define DESC(x) desc(x, __LINE__)
 #define CHECK(test) check(test, __LINE__)
 

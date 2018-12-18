@@ -149,7 +149,7 @@ void test_push_back(VectorTest &vTest) {
 }
 
 
-/*! This program is a simple test-suite for the Vector class. */
+/*! This program is a test for the Vector<T> class. */
 int main() {
 
     cout << "Testing basic Vector class-template memory "

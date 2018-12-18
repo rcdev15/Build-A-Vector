@@ -33,7 +33,7 @@ public:
 };
 
 
-//TODO: Replace this ugly hack
+//TODO: Replace this compiler echo
 #define DESC(x) desc(x, __LINE__)
 #define CHECK(test) check(test, __LINE__)
 

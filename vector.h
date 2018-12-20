@@ -9,33 +9,55 @@
 
 
 /****
-* THINGS TO REMEMBER:
-*
+* THINGS TO REMEMBER ->
 *                       RAII
 *   Resource aquisition (or allocation) is intailization
 *
-*  std::unique_ptr -> https://en.cppreference.com/w/cpp/memory/unique_ptr
+*   std::unique_ptr -> https://en.cppreference.com/w/cpp/memory/unique_ptr
+*
+*   Iterator Concept Hierachy ->
+*
+*      Iterator: only supports dereference
+*
+*      InputIterator: also supports increment, like int*
+*        -- only read support is guranteed
+*        -- only single-pass support is guranteed
+*
+*      ForwardIterator: like InputIterator,
+*       ++ Supports multi-pass algorithms
+*
+*      BidirectionalIterator: like Forward also supports decrement
+*
+*       RandomAccessIterator: like BidirectionalIterator,
+*        ++ Supports arbitrary-size forward and backward
+*
+*   Rule of Five ->  copy-constructor,
+*                    assigment operator,
+*                    destructor,
+*                    move constructor,  (for performance)
+*                    move assignment operator (for performance)
 *
 ****/
 
-/****
+/**************
 *          To Optimize/Refactor
-* TODO: change all loop copys to std::copy()
-* TODO: Add iterators
-* TODO: add move constructor
+* TODO: change all loop copys to std::copy() or memcopy(if bits are known)
+* TODO: Add .begin() iterators
 * TODO:  ...
 *
-****/
+****************/
 
 
 template <typename T>
 class Vector {
 public:
-  Vector();
-  Vector(int capacity);
+  Vector(int capacity = 0);
   Vector(const Vector<T> &rightSide);
+  Vector(Vector<T> &&rValue);
 
+  Vector& operator =(Vector<T> &&rValue); //move assignment
   Vector& operator =(const Vector<T> &rightSide);
+
   bool operator ==(const Vector<T> &rightSide) const;
   T& operator [](int index);
   const T& operator [](int index) const;
@@ -56,25 +78,32 @@ private:
 
 
 template <typename T>
-Vector<T>::Vector() : mCapacity(0), mSize(0) {
-  arr.reset(new T[mCapacity]);
+Vector<T>::Vector(int capacity) : mCapacity(capacity), mSize(capacity) {
+  if (mCapacity == 0) {
+    arr = std::make_unique<T[]>(1);
+  } else {
+    arr = std::make_unique<T[]>(mCapacity);
+  }
 }
 
-template <typename T>
-Vector<T>::Vector(int capacity) : mCapacity(capacity), mSize(capacity) {
-  arr.reset(new T[mCapacity]);
-}
 
 template <typename T>
 Vector<T>::Vector(const Vector<T> &rightSide) {
-
   mCapacity = rightSide.mCapacity;
   mSize = rightSide.mSize;
-  arr.reset(new T[mCapacity]());
-  // copy over
+  arr = std::make_unique<T[]>(mCapacity);
   for (unsigned int i = 0; i < mSize; i++) {
     arr[i] = rightSide.arr[i];
   }
+}
+
+template <typename T>
+Vector<T>::Vector(Vector<T> &&rValue) {
+  mCapacity = rValue.mCapacity;
+  mSize = rValue.mSize;
+  arr = std::make_unique<T[]>(mCapacity);
+  arr = std::move(rValue.arr); // switchs ownership of the pointer
+  //                              and sets to rValue to nullptr ??
 }
 
 
@@ -94,6 +123,18 @@ Vector<T>& Vector<T>::operator =(const Vector<T> &rightSide) {
 }
 
 template <typename T>
+Vector<T>& Vector<T>::operator =(Vector<T> &&rValue) {
+  if (this != &rValue) {
+    mCapacity = rValue.mCapacity;
+    mSize = rValue.mSize;
+    arr.reset(new T[mCapacity]);
+    arr = std::move(rValue.arr); //move
+  }
+  return( *this );
+}
+
+
+template <typename T>
 bool Vector<T>::operator ==(const Vector<T> &rightSide) const {
   if (this != &rightSide) {
     if (mSize != rightSide.mSize || mCapacity != rightSide.mCapacity) {
@@ -103,9 +144,9 @@ bool Vector<T>::operator ==(const Vector<T> &rightSide) const {
       if (arr[i] != rightSide.arr[i]) {
         return( false );//          Not equal if not same element in same Order
       }
-    }//                          If it makes it to hear the Vector's are equal
-  }
-  return( true );
+    }
+  }// If it makes it to hear the Vector's are equal-> Worst case O(n)
+  return( true );//
 }
 
 template <typename T>

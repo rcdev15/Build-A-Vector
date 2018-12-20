@@ -1,9 +1,8 @@
-CXXFLAGS = -std=c++14 -Wall -Werror
+CXXFLAGS = -std=c++17 -Wno-noexcept-type -Wall -Werror
+
+# even with -Wno-noexcept-type noexcept is not working
 
 all : testmain
-
-#=============================================================================
-# How to build the binary
 
 testmain : testmain.o vectortest.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
@@ -20,8 +19,6 @@ clean:
 
 .PHONY: all clean test doc
 
-#=============================================================================
 # Dependencies
-
 testmain.cpp : vectortest.h vector.h
 vectortest.cpp : vectortest.h

@@ -24,6 +24,23 @@ Vector<int> makeTestVector(int n) {
     return v;
 }
 
+/*
+void test_iterators(VectorTest &vTest) {
+    vTest.DESC("iterators run threw vector properly")
+
+    Vector<int> v;
+    for (int i = 0; i < 10; i++)
+        v.push_back(i * i);
+
+    // should be -> [0, 1, 4, 9, ....]
+    int j = 0;
+    for (auto iter = v.begin(); iter != v.end(); iter++, j++;) {
+        vTest.CHECK(iter != nullptr);
+        vTest.CHECK(*iter == v[j]);
+        vTest.CHECK(*iter == j*j);
+    }
+    vTest.result();
+}*/
 
 /*! Test the Vector constructors. */
 void test_constructors(VectorTest &vTest) {
@@ -62,7 +79,6 @@ void test_constructors(VectorTest &vTest) {
     vTest.result();
 }
 
-
 void test_bad_indexes(VectorTest &vTest) {
     Vector<int> v;
 
@@ -99,11 +115,10 @@ void test_bad_indexes(VectorTest &vTest) {
     vTest.result();
 }
 
-
 void test_assignment(VectorTest &vTest) {
     Vector<int> v1, v2;
-
     vTest.DESC("Vector assignment operator");
+
     v1 = makeTestVector(30);
     v2 = v1;
     vTest.CHECK(v2.size() == 30);
@@ -129,20 +144,18 @@ void test_assignment(VectorTest &vTest) {
     vTest.result();
 }
 
-
 void test_push_back(VectorTest &vTest) {
     vTest.DESC("push_back() stores values and grows Vector properly");
 
     Vector<int> v;
-    int i;
     const int NUMVALS = 70000;
 
     // Put 20,000 ints into the vector.
-    for (i = 0; i < NUMVALS; i++)
+    for (int i = 0; i < NUMVALS; i++)
         v.push_back(i);
 
     // Verify that the values look correct through array indexing.
-    for (i = 0; i < NUMVALS; i++)
+    for (int i = 0; i < NUMVALS; i++)
         vTest.CHECK(v[i] == i);
 
     vTest.result();
@@ -160,6 +173,7 @@ int main() {
     test_bad_indexes(vTest);
     test_assignment(vTest);
     test_push_back(vTest);
+    //test_iterators(vTest)
 
     // Return 0 if everything passed, nonzero if something failed.
     return !vTest.ok();

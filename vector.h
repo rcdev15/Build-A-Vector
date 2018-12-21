@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <iterator>
 
 
 /****
@@ -47,172 +48,183 @@
 *
 ****************/
 
-
 template <typename T>
 class Vector {
 public:
-  Vector(int capacity = 0);
-  Vector(const Vector<T> &rightSide);
-  Vector(Vector<T> &&rValue);
+    typedef int size_type;
 
-  Vector& operator =(Vector<T> &&rValue); //move assignment
-  Vector& operator =(const Vector<T> &rightSide);
+    class iterator {
+    public:
+        typedef iterator self_type;
+        typedef T value_type;
+        typedef T& reference;
+        typedef std::unique_ptr<T> pointer;
+        typedef std::forward_iterator_tag iterator_category;
+        typedef int difference_type;
 
-  bool operator ==(const Vector<T> &rightSide) const;
-  T& operator [](int index);
-  const T& operator [](int index) const;
+        iterator(pointer ptr) : ptr_(ptr) {}
+        self_type operator ++() { self_type i = *this; ptr_++; return i; }
+        self_type operator ++(int junk) { ptr_++; return *this; }
+        reference operator *() { return *ptr_; }
+        pointer operator ->() { return ptr_; }
+        bool operator ==(const self_type& rhs) { return ptr_ == rhs.ptr_; }
+        bool operator !=(const self_type& rhs) { return ptr_ != rhs.ptr_; }
 
-  int size() const;
-  int capacity() const;
-  void clear();
-  void reserve(int new_cap);
-  void shrink_to_fit();
-  void push_back(const T &value);
+    private:
+        pointer ptr_;
+    };
+
+    class const_iterator {
+    public:
+        typedef const_iterator self_type;
+        typedef T value_type;
+        typedef T& reference;
+        typedef std::unique_ptr<T> pointer;
+        typedef int difference_type;
+        typedef std::forward_iterator_tag iterator_category;
+
+        const_iterator(pointer ptr) : ptr_(ptr) { }
+        self_type operator++() { self_type i = *this; ptr_++; return i; }
+        self_type operator++(int junk) { ptr_++; return *this; }
+        reference operator*() { return *ptr_; }
+        const pointer operator->() { return ptr_; }
+        bool operator==(const self_type& rhs) { return ptr_ == rhs.ptr_; }
+        bool operator!=(const self_type& rhs) { return ptr_ != rhs.ptr_; }
+
+    private:
+        pointer ptr_;
+    };
+
+    Vector(size_type capacity = 0) : mSize(0), mCapacity(capacity) {
+        if (mCapacity == 0) {
+            arr = std::make_unique<T[]>(mCapacity + 1);
+        } else {
+            arr = std::make_unique<T[]>(mCapacity);
+        }
+    }
+
+    Vector(const Vector<T> &giver) {
+        mCapacity = giver.mCapacity;
+        mSize = giver.mSize;
+        arr = std::make_unique<T[]>(mCapacity);
+        for (unsigned int i = 0; i < mSize; i++) {
+            arr[i] = giver.arr[i];
+        }
+    }
+
+    Vector(Vector<T> &&rValue) {
+        mCapacity = rValue.mCapacity;
+        mSize = rValue.mSize;
+        arr.reset(new T[mCapacity]);
+        arr = std::move(rValue.arr);
+    }
+
+    Vector& operator =(const Vector<T> &rhs) {
+        if (this != &rhs) {
+            if (mSize != rhs.mSize || mCapacity != rhs.mCapacity) {
+                mCapacity = rhs.mCapacity;
+                mSize = rhs.mSize;
+            }
+            arr.reset(new T[mCapacity]);
+            for (unsigned int i = 0; i < mSize; i++) {
+                arr[i] = rhs.arr[i];
+            }
+        }
+        return( *this );
+    }
+
+    Vector& operator =(Vector<T> &&rValue) {
+        if (this != &rValue) {
+            mCapacity = rValue.mCapacity;
+            mSize = rValue.mSize;
+            arr.reset(new T[mCapacity]);
+            arr = std::move(rValue.arr);
+        }
+        return ( *this );
+    }
+
+    bool operator ==(const Vector<T> &rhs) const {
+        if (this != &rhs) {
+            if (mSize != rhs.mSize || mCapacity != rhs.mCapacity) {
+                return ( false );
+            }
+            for (unsigned int i =0 ; i < mSize; i++) {
+                if (arr[i] != rhs.arr[i]) {
+                    return( false );
+                }
+            }
+        }
+        return( true );
+    }
+
+    size_type capacity() const { return mCapacity; }
+
+    size_type size() const { return mSize; }
+
+    T& operator[](size_type index) {
+        if (index < 0 || index >= mSize) {
+            throw std::out_of_range("Bad Index");
+        }
+        return arr[index];
+    }
+
+    const T& operator[](size_type index) const {
+        if (index < 0 || index >= mSize) {
+            throw std::out_of_range("Bad index");
+        }
+        return arr[index];
+    }
+
+    void clear() { arr.reset(new T[mCapacity]); }
+
+    void push_back(const T& value) {
+        if (mCapacity == 0) mCapacity++;
+        if (isFull()) reserve(mCapacity * 2);
+        arr[mSize] = value;
+        mSize++;
+    }
+
+    void reserve(size_type new_cap) {
+        if (new_cap > mCapacity) {
+            Vector<T> temp(*this);
+            mCapacity = new_cap;
+            arr.reset(new T[mCapacity]);
+            for (unsigned int i = 0; i < mSize; i++) {
+                arr[i] = temp[i];
+            }
+        }
+    }
+
+    void shrink_to_fit() {
+        if (mSize != mCapacity) {
+            Vector<T> temp(*this);
+            mCapacity = mSize;
+            arr.reset(new T[mCapacity]);
+            for (unsigned int i = 0; i < mSize; i++) {
+                arr[i] = temp[i];
+            }
+        }
+    }
+
+    iterator begin() { return iterator(arr); }
+
+    iterator end() { return iterator(arr + mSize); }
+
+    const_iterator begin() const { return const_iterator(arr); }
+
+    const_iterator end() const { return const_iterator(arr + mSize); }
 
 private:
-  std::unique_ptr<T[]> arr;
-  int mCapacity;
-  int mSize;
-  bool isFull() const;
+    bool isFull() const { return mSize >= mCapacity; }
+
+    std::unique_ptr<T[]> arr;
+
+    size_type mSize;
+
+    size_type mCapacity;
+
 };
 
 
-template <typename T>
-Vector<T>::Vector(int capacity) : mCapacity(capacity), mSize(capacity) {
-  if (mCapacity == 0) {
-    arr = std::make_unique<T[]>(1);
-  } else {
-    arr = std::make_unique<T[]>(mCapacity);
-  }
-}
 
-
-template <typename T>
-Vector<T>::Vector(const Vector<T> &rightSide) {
-  mCapacity = rightSide.mCapacity;
-  mSize = rightSide.mSize;
-  arr = std::make_unique<T[]>(mCapacity);
-  for (unsigned int i = 0; i < mSize; i++) {
-    arr[i] = rightSide.arr[i];
-  }
-}
-
-template <typename T>
-Vector<T>::Vector(Vector<T> &&rValue) {
-  mCapacity = rValue.mCapacity;
-  mSize = rValue.mSize;
-  arr = std::make_unique<T[]>(mCapacity);
-  arr = std::move(rValue.arr); // switchs ownership of the pointer
-  //                              and sets to rValue to nullptr ??
-}
-
-
-template <typename T>
-Vector<T>& Vector<T>::operator =(const Vector<T> &rightSide) {
-  if (this != &rightSide) {
-    if (mCapacity != rightSide.mCapacity || mSize != rightSide.mSize) {
-      mCapacity = rightSide.mCapacity;
-      mSize = rightSide.mSize;
-    }
-    arr.reset(new T[mCapacity]);
-    for (unsigned int i = 0; i < mSize; i++) {
-      arr[i] = rightSide.arr[i];
-    }
-  }
-  return( *this );
-}
-
-template <typename T>
-Vector<T>& Vector<T>::operator =(Vector<T> &&rValue) {
-  if (this != &rValue) {
-    mCapacity = rValue.mCapacity;
-    mSize = rValue.mSize;
-    arr.reset(new T[mCapacity]);
-    arr = std::move(rValue.arr); //move
-  }
-  return( *this );
-}
-
-
-template <typename T>
-bool Vector<T>::operator ==(const Vector<T> &rightSide) const {
-  if (this != &rightSide) {
-    if (mSize != rightSide.mSize || mCapacity != rightSide.mCapacity) {
-      return( false );
-    }
-    for (unsigned int i = 0; i < mSize; i++) {//  Compare all elements
-      if (arr[i] != rightSide.arr[i]) {
-        return( false );//          Not equal if not same element in same Order
-      }
-    }
-  }// If it makes it to hear the Vector's are equal-> Worst case O(n)
-  return( true );//
-}
-
-template <typename T>
-T& Vector<T>::operator [](int index) {
-  if (index > mSize-1 || index < 0) {
-    throw std::out_of_range("Bad index");
-  }
-  return arr[index];
-}
-
-template <typename T>
-const T& Vector<T>::operator [](int index) const {
-  if (index > mSize-1 || index < 0) {
-    throw std::out_of_range("Bad index");
-  }
-  return arr[index];
-}
-
-template <typename T>
-int Vector<T>::size() const { return mSize; }
-
-template <typename T>
-int Vector<T>::capacity() const { return mCapacity; }
-
-template <typename T>
-void Vector<T>::clear() {
-  arr.reset(new T[mCapacity]);
-}
-
-template <typename T>
-void Vector<T>::reserve(int new_cap) {
-  if (new_cap > mCapacity) {
-    Vector<T> temp(*this);
-    mCapacity = new_cap;
-    arr.reset(new T[mCapacity]);
-    for (unsigned int i = 0; i < mSize; i++) {
-      arr[i] = temp[i];
-    }
-  }
-}
-
-template <typename T>
-void Vector<T>::shrink_to_fit() {
-  if (mSize != mCapacity) {
-    Vector<T> temp(*this);
-    mCapacity = mSize;
-    arr.reset(new T[mCapacity]);
-    for (unsigned int i = 0; i < mSize; i++) {
-      arr[i] = temp[i];
-    }
-  }
-}
-
-template <typename T>
-void Vector<T>::push_back(const T &value) {
-  if (mCapacity == 0) mCapacity++;
-  if (isFull()) reserve(mCapacity * 2);
-
-  arr[mSize] = value;
-  mSize++;
-}
-
-template <typename T>
-bool Vector<T>::isFull() const {
-  return( mSize >= mCapacity );
-}
-
-
-#endif //VECTOR_H
+#endif //Vector_H

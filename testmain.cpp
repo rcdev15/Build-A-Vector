@@ -50,8 +50,8 @@ void test_constructors(VectorTest &vTest) {
     vTest.CHECK(v1.capacity() == 0);
 
     Vector<float> v2(10);
-    vTest.CHECK(v2.size() == 10);
-    vTest.CHECK(v2.capacity() >= 10);
+    vTest.CHECK(v2.size() == 0);
+    vTest.CHECK(v2.capacity() == 10);
     vTest.result();
 
     vTest.DESC("Vector copy constructor / index operator");

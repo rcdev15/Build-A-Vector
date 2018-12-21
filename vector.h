@@ -43,7 +43,6 @@
 /**************
 *          To Optimize/Refactor
 * TODO: change all loop copys to std::copy() or memcopy(if bits are known)
-* TODO: Add .begin() iterators
 * TODO:  ...
 *
 ****************/

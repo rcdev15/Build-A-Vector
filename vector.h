@@ -9,43 +9,6 @@
 #include <iterator>
 
 
-/****
-* THINGS TO REMEMBER ->
-*                       RAII
-*   Resource aquisition (or allocation) is intailization
-*
-*   std::unique_ptr -> https://en.cppreference.com/w/cpp/memory/unique_ptr
-*
-*   Iterator Concept Hierachy ->
-*
-*      Iterator: only supports dereference
-*
-*      InputIterator: also supports increment, like int*
-*        -- only read support is guranteed
-*        -- only single-pass support is guranteed
-*
-*      ForwardIterator: like InputIterator,
-*       ++ Supports multi-pass algorithms
-*
-*      BidirectionalIterator: like Forward also supports decrement
-*
-*       RandomAccessIterator: like BidirectionalIterator,
-*        ++ Supports arbitrary-size forward and backward
-*
-*   Rule of Five ->  copy-constructor,
-*                    assigment operator,
-*                    destructor,
-*                    move constructor,  (for performance)
-*                    move assignment operator (for performance)
-*
-****/
-
-/**************
-*          To Optimize/Refactor
-* TODO: change all loop copys to std::copy() or memcopy(if bits are known)
-* TODO:  ...
-*
-****************/
 
 template <typename T>
 class Vector {

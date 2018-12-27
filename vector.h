@@ -20,11 +20,14 @@ public:
         typedef iterator self_type;
         typedef T value_type;
         typedef T& reference;
-        typedef std::unique_ptr<T> pointer;
+        typedef std::unique_ptr<T[]> u_pointer;
+        typedef T* pointer;
         typedef std::forward_iterator_tag iterator_category;
         typedef int difference_type;
 
-        iterator(pointer ptr) : ptr_(ptr) {}
+        iterator(u_pointer ptr) : ptr_(ptr.get()) {}
+        
+        ~iterator() { delete ptr_; }
         
         self_type operator ++() { self_type i = *this; ptr_++; return i; }
         
@@ -47,11 +50,14 @@ public:
         typedef const_iterator self_type;
         typedef T value_type;
         typedef T& reference;
-        typedef std::unique_ptr<T> pointer;
+        typedef std::unique_ptr<T[]> u_pointer;
+        typedef T* pointer;
         typedef int difference_type;
         typedef std::forward_iterator_tag iterator_category;
 
-        const_iterator(pointer ptr) : ptr_(ptr) {}
+        const_iterator(u_pointer ptr) : ptr_(ptr.get()) {}
+        
+        ~const_iterator() { delete ptr_; }
         
         self_type operator ++() { self_type i = *this; ptr_++; return i; }
         

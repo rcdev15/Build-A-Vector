@@ -1,6 +1,5 @@
 CXXFLAGS = -std=c++17 -Wno-noexcept-type -Wall -Werror
 
-# even with -Wno-noexcept-type noexcept is not working
 
 all : testmain
 

@@ -75,7 +75,7 @@ public:
         pointer ptr_;
     };
 
-    Vector(size_type capacity = 0) : mSize(0), mCapacity(capacity) {
+    explicit Vector(size_type capacity = 0) : mSize(0), mCapacity(capacity) {
         if (mCapacity == 0) {
             arr = std::make_unique<T[]>(mCapacity + 1);
         } else {
